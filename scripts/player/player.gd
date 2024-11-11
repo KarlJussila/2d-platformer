@@ -1,68 +1,54 @@
 extends CharacterBody2D
-@onready var animated_sprite_2d: AnimatedSprite2D = $AnimatedSprite2D
-@onready var FALL_TRANSITION_TIME: float = animated_sprite_2d.sprite_frames.get_frame_count("fall_transition") / animated_sprite_2d.sprite_frames.get_animation_speed("fall_transition")
-@export var SPEED: float = 200.0
-@export var JUMP_VELOCITY: float = -300.0
+@onready var animation_player: AnimationPlayer = $AnimationPlayer
+@onready var animation_tree: AnimationTree = $AnimationTree
 
-enum Anim_State {Idle, Walk, Run, Jump, Fall, Fall_Transition}
+@export var jump_velocity: float = -250.0
+@export var acceleration: float = 1200.0
+@export_range(0,1) var friction: float = 0.15
+
 enum Action {None, Jump, Attack, Roll, Dash}
 
 var queued_action: Action = Action.None
 var queued_action_time: int = 0
-var current_anim_state: Anim_State = Anim_State.Idle
 
-func _process(delta: float) -> void:
-	animate_player()
+func _process(_delta: float) -> void:
+	_animate_player()
 
 func _physics_process(delta: float) -> void:
-	player_idle(delta)
-	player_move(delta)
-	player_jump_and_fall(delta)
+	_move(delta)
+	_jump_and_fall(delta)
 	
 	move_and_slide()
-
-func player_idle(delta: float) -> void:
-	if is_on_floor():
-		current_anim_state = Anim_State.Idle
 	
-func player_move(delta: float) -> void:
-	# Get the input direction and handle the movement/deceleration.
-	# As good practice, you should replace UI actions with custom gameplay actions.
+func _animate_player() -> void:
+	# Set animation parameters
+	animation_tree["parameters/conditions/running"] = bool(velocity.x)
+	animation_tree["parameters/conditions/idle"] = not velocity.x
+	animation_tree["parameters/conditions/jumping"] = velocity.y < 0
+	animation_tree["parameters/conditions/falling"] = _about_to_fall()
+	animation_tree["parameters/conditions/on_ground"] = is_on_floor()
+	
+	# Flip player according to facing direction
 	var direction := Input.get_axis("move_left", "move_right")
 	if direction:
-		current_anim_state = Anim_State.Run
-		animated_sprite_2d.flip_h = false if direction > 0 else true
-		velocity.x = direction * SPEED
-	else:
-		velocity.x = move_toward(velocity.x, 0, SPEED)
+		self.scale = Vector2(1,1) if direction > 0 else Vector2(1,-1)
+		self.rotation = 0 if direction > 0.0 else PI
+	
+func _move(delta: float) -> void:
+	# Get the input direction and handle the movement/deceleration.
+	var direction := Input.get_axis("move_left", "move_right")
+	if direction:
+		# Accelerate
+		velocity.x += direction * acceleration * delta
+		
+	# Decelerate
+	velocity.x = move_toward(velocity.x, 0, max(10, abs(velocity.x) * friction))
 
-func animate_player() -> void:
-	if current_anim_state == Anim_State.Idle:
-		animated_sprite_2d.play("idle")
-	elif current_anim_state == Anim_State.Run:
-		animated_sprite_2d.play("run")
-	elif current_anim_state == Anim_State.Jump:
-		animated_sprite_2d.play("jump")
-	elif current_anim_state == Anim_State.Fall_Transition:
-		animated_sprite_2d.play("fall_transition")
-	elif current_anim_state == Anim_State.Fall:
-		animated_sprite_2d.play("fall")
-
-func player_jump_and_fall(delta: float) -> void:
+func _jump_and_fall(delta: float) -> void:
 	# In air
 	if not is_on_floor():
 		# Add gravity
 		velocity += get_gravity() * delta
-		
-		# Set jump animation until equilibrium
-		if velocity.y < -(get_gravity().y * FALL_TRANSITION_TIME)/2:
-			current_anim_state = Anim_State.Jump
-		# Set transition animation at equilibrium
-		elif velocity.y < (get_gravity().y * FALL_TRANSITION_TIME)/2:
-			current_anim_state = Anim_State.Fall_Transition
-		# Set fall animation when falling
-		else:
-			current_anim_state = Anim_State.Fall
 		
 		# Queue jump if still in the air
 		if Input.is_action_just_pressed("jump"):
@@ -72,8 +58,12 @@ func player_jump_and_fall(delta: float) -> void:
 	else:
 		# Jump
 		if Input.is_action_just_pressed("jump"):
-			velocity.y = JUMP_VELOCITY
+			velocity.y = jump_velocity
 		# Queued jump
 		if queued_action == Action.Jump and Time.get_ticks_msec() - queued_action_time < 100:
-			velocity.y = JUMP_VELOCITY
+			velocity.y = jump_velocity
 			queued_action = Action.None
+
+
+func _about_to_fall() -> bool:
+	return not is_on_floor() and velocity.y >= -(get_gravity().y * animation_player.get_animation("fall_transition").length)/2
