@@ -4,7 +4,7 @@ extends CharacterBody2D
 
 @export var jump_velocity: float = -250.0
 @export var acceleration: float = 1200.0
-@export_range(0,1) var friction: float = 0.15
+@export var friction: float = 9
 
 enum Action {None, Jump, Attack, Roll, Dash}
 
@@ -16,20 +16,19 @@ func _process(_delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	_move(delta)
-	_jump_and_fall(delta)
-	
 	move_and_slide()
 	
 func _animate_player() -> void:
+	var direction := Input.get_axis("move_left", "move_right")
+	
 	# Set animation parameters
-	animation_tree["parameters/conditions/running"] = bool(velocity.x)
-	animation_tree["parameters/conditions/idle"] = not velocity.x
+	animation_tree["parameters/conditions/running"] = bool(direction)
+	animation_tree["parameters/conditions/idle"] = not direction
 	animation_tree["parameters/conditions/jumping"] = velocity.y < 0
 	animation_tree["parameters/conditions/falling"] = _about_to_fall()
 	animation_tree["parameters/conditions/on_ground"] = is_on_floor()
 	
 	# Flip player according to facing direction
-	var direction := Input.get_axis("move_left", "move_right")
 	if direction:
 		self.scale = Vector2(1,1) if direction > 0 else Vector2(1,-1)
 		self.rotation = 0 if direction > 0.0 else PI
@@ -42,10 +41,9 @@ func _move(delta: float) -> void:
 		velocity.x += direction * acceleration * delta
 		
 	# Decelerate
-	velocity.x = move_toward(velocity.x, 0, max(10, abs(velocity.x) * friction))
-
-func _jump_and_fall(delta: float) -> void:
-	# In air
+	velocity.x = move_toward(velocity.x, 0, max(10, abs(velocity.x) * friction * delta))
+	
+	# In air (gravity, jump queuing)
 	if not is_on_floor():
 		# Add gravity
 		velocity += get_gravity() * delta
@@ -54,7 +52,7 @@ func _jump_and_fall(delta: float) -> void:
 		if Input.is_action_just_pressed("jump"):
 			queued_action = Action.Jump
 			queued_action_time = Time.get_ticks_msec()
-	# On ground
+	# On ground (jump)
 	else:
 		# Jump
 		if Input.is_action_just_pressed("jump"):
