@@ -1,6 +1,6 @@
 [gd_scene load_steps=45 format=3 uid="uid://b1ta6lkr0gv44"]
 
-[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_df70c"]
+[ext_resource type="Script" uid="uid://bxskyd25htmn6" path="res://scripts/player/player.gd" id="1_df70c"]
 [ext_resource type="Texture2D" uid="uid://kp8dtngqih3h" path="res://assets/characters/player/player_spritesheet.png" id="1_rfmxq"]
 
 [sub_resource type="Animation" id="Animation_wssb1"]
@@ -438,14 +438,14 @@ tracks/3/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_7mhti"]
 _data = {
-"RESET": SubResource("Animation_wssb1"),
-"fall": SubResource("Animation_q0sfl"),
-"fall_transition": SubResource("Animation_dnpvh"),
-"idle": SubResource("Animation_aoame"),
-"jump": SubResource("Animation_i1arg"),
-"run": SubResource("Animation_3k2n2"),
-"slash1": SubResource("Animation_807ux"),
-"slash2": SubResource("Animation_e4rv1")
+&"RESET": SubResource("Animation_wssb1"),
+&"fall": SubResource("Animation_q0sfl"),
+&"fall_transition": SubResource("Animation_dnpvh"),
+&"idle": SubResource("Animation_aoame"),
+&"jump": SubResource("Animation_i1arg"),
+&"run": SubResource("Animation_3k2n2"),
+&"slash1": SubResource("Animation_807ux"),
+&"slash2": SubResource("Animation_e4rv1")
 }
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_5ns3r"]
