@@ -1,7 +1,8 @@
-[gd_scene load_steps=45 format=3 uid="uid://b1ta6lkr0gv44"]
+[gd_scene load_steps=46 format=3 uid="uid://b1ta6lkr0gv44"]
 
 [ext_resource type="Script" uid="uid://bxskyd25htmn6" path="res://scripts/player/player.gd" id="1_df70c"]
 [ext_resource type="Texture2D" uid="uid://kp8dtngqih3h" path="res://assets/characters/player/player_spritesheet.png" id="1_rfmxq"]
+[ext_resource type="PackedScene" uid="uid://ct5i2peeng2d3" path="res://scenes/utils/health.tscn" id="3_gmlin"]
 
 [sub_resource type="Animation" id="Animation_wssb1"]
 length = 0.001
@@ -606,7 +607,7 @@ vframes = 27
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 active = false
 libraries = {
-"": SubResource("AnimationLibrary_7mhti")
+&"": SubResource("AnimationLibrary_7mhti")
 }
 autoplay = "idle"
 
@@ -627,11 +628,6 @@ parameters/Move/Run/blend_position = 0
 position = Vector2(0, -12)
 shape = SubResource("CapsuleShape2D_y1g0q")
 
-[node name="Label" type="Label" parent="."]
-offset_left = -7.0
-offset_top = -47.0
-offset_right = 7.0
-offset_bottom = -24.0
-horizontal_alignment = 1
+[node name="Health" parent="." instance=ExtResource("3_gmlin")]
 
 [connection signal="animation_started" from="AnimationTree" to="." method="_on_animation_tree_animation_started"]
